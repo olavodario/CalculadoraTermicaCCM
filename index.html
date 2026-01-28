@@ -35,7 +35,11 @@
             </div>
             <div class="input-group">
                 <label for="refFactor">Fator de Referência (BTU/h por m³)</label>
-                <input type="number" id="refFactor" value="1000" min="0">
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="refFactor" value="1000" readonly
+                        style="background: rgba(15, 23, 42, 0.4); color: var(--text-muted); cursor: not-allowed;">
+                    <button id="editRefFactorBtn" class="btn-secondary btn-sm" title="Alterar Valor">Alterar</button>
+                </div>
             </div>
             <div class="result-row">
                 <span>Dissipação Externa:</span>
@@ -96,11 +100,15 @@
                     <span class="value-large" id="sensibleHeat">0 TR</span>
                 </div>
                 <div class="summary-item">
-                    <span class="label">Capacidade Total (/0.75)</span>
+                    <span class="label">Capacidade Total</span>
                     <span class="value-large" id="capacityDiv75">0 TR</span>
                 </div>
                 <div class="summary-item">
-                    <span class="label">Carga Total (+15%)</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="label" id="marginLabel">Carga Total + Fator de Segurança</span>
+                        <button id="editMarginBtn" class="btn-secondary btn-sm" title="Alterar Margem">Alterar
+                            Fator</button>
+                    </div>
                     <span class="value-large" id="totalCapacity">0 TR</span>
                 </div>
                 <!-- New Final Result Row -->
@@ -147,6 +155,42 @@
                 Potência Calculada: <strong id="convResult">0 CV</strong>
             </div>
             <button id="applyConversionBtn" class="btn-primary">Usar este valor</button>
+        </div>
+    </div>
+
+    <!-- Modal for Reference Factor -->
+    <div id="refFactorModal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="closeRefModal">&times;</span>
+            <h3>Fator de Referência</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">Altere o valor de BTU/h por m³
+                usado no cálculo da carga externa.</p>
+
+            <div class="input-group">
+                <label>Novo Valor</label>
+                <input type="number" id="newRefFactorInput" value="1000">
+            </div>
+
+            <button id="saveRefFactorBtn" class="btn-primary" style="width: 100%; margin-top: 10px;">Salvar
+                Alteração</button>
+        </div>
+    </div>
+
+    <!-- Modal for Margin -->
+    <div id="marginModal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="closeMarginModal">&times;</span>
+            <h3>Margem de Segurança</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">Altere a porcentagem de
+                segurança aplicada (Padrão: 15%).</p>
+
+            <div class="input-group">
+                <label>Nova Margem (%)</label>
+                <input type="number" id="newMarginInput" value="15">
+            </div>
+
+            <button id="saveMarginBtn" class="btn-primary" style="width: 100%; margin-top: 10px;">Salvar
+                Alteração</button>
         </div>
     </div>
 

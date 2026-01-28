@@ -7,7 +7,8 @@ const STATE = {
     items: [],
     totalExternalLoadBtu: 0,
     totalEquipLoadKw: 0,
-    totalEquipLoadBtu: 0
+    totalEquipLoadBtu: 0,
+    margin: 15
 };
 
 // Constants
@@ -51,7 +52,7 @@ const convResult = document.getElementById('convResult');
 // --- Event Listeners ---
 
 roomAreaInput.addEventListener('input', updateExternalLoad);
-refFactorInput.addEventListener('input', updateExternalLoad);
+// refFactorInput is now read-only, updated via modal
 
 addEquipBtn.addEventListener('click', addItem);
 openConverterBtn.addEventListener('click', () => {
@@ -61,6 +62,7 @@ openConverterBtn.addEventListener('click', () => {
 closeModalBtn.addEventListener('click', closeConverter);
 window.addEventListener('click', (e) => {
     if (e.target === converterModal) closeConverter();
+    if (e.target === refFactorModal) closeRefModalFunc();
 });
 
 convKwInput.addEventListener('input', calculateConversionPreview);
@@ -70,6 +72,36 @@ applyConversionBtn.addEventListener('click', () => {
     if (cv) {
         equipPowerInput.value = cv.toFixed(2);
         closeConverter();
+    }
+});
+
+// Reference Factor Modal Logic
+const editRefFactorBtn = document.getElementById('editRefFactorBtn');
+const refFactorModal = document.getElementById('refFactorModal');
+const closeRefModal = document.getElementById('closeRefModal');
+const saveRefFactorBtn = document.getElementById('saveRefFactorBtn');
+const newRefFactorInput = document.getElementById('newRefFactorInput');
+
+function openRefModalFunc() {
+    newRefFactorInput.value = refFactorInput.value;
+    refFactorModal.classList.remove('hidden');
+    setTimeout(() => refFactorModal.classList.add('visible'), 10);
+    newRefFactorInput.focus();
+}
+
+function closeRefModalFunc() {
+    refFactorModal.classList.remove('visible');
+    setTimeout(() => refFactorModal.classList.add('hidden'), 300);
+}
+
+editRefFactorBtn.addEventListener('click', openRefModalFunc);
+closeRefModal.addEventListener('click', closeRefModalFunc);
+saveRefFactorBtn.addEventListener('click', () => {
+    const newVal = parseFloat(newRefFactorInput.value);
+    if (!isNaN(newVal) && newVal >= 0) {
+        refFactorInput.value = newVal;
+        updateExternalLoad();
+        closeRefModalFunc();
     }
 });
 
@@ -155,8 +187,9 @@ function renderResults() {
     // 2. Capacidade Total = Sensible / 0.75
     const capacityDiv75TR = sensibleTR / 0.75;
 
-    // 3. Carga Total (+15%) = Capacity * 1.15
-    const totalCapacityMarginedTR = capacityDiv75TR * 1.15;
+    // 3. Carga Total (+Margin%)
+    const marginPercent = STATE.margin || 15;
+    const totalCapacityMarginedTR = capacityDiv75TR * (1 + (marginPercent / 100));
 
     // 4. Final Total = Margined Capacity + External Load
     const externalLoadTR = STATE.totalExternalLoadBtu / BTU_TO_TR;
@@ -168,6 +201,9 @@ function renderResults() {
     // Update Logic Displays
     sensibleHeatDisplay.innerHTML = `${sensibleTR.toFixed(1)} TR`;
     if (capacityDiv75Display) capacityDiv75Display.innerText = `${capacityDiv75TR.toFixed(1)} TR`;
+
+    // Update label to reflect current margin
+    document.getElementById('marginLabel').innerText = `Carga Total + Fator de Segurança (+${marginPercent}%)`;
     totalCapacityDisplay.innerText = `${totalCapacityMarginedTR.toFixed(1)} TR`;
 
     // Final Result
@@ -176,6 +212,42 @@ function renderResults() {
     recSplit.innerText = `${Math.ceil(finalTotalTR)} TR`;
     recSelf.innerText = `${Math.ceil(finalTotalTR)} TR`;
     recAdiabatic.innerText = `~${(finalTotalBtu / 10).toLocaleString()} m³/h (Est.)`;
+}
+
+// --- Margin Modal Logic ---
+const editMarginBtn = document.getElementById('editMarginBtn');
+const marginModal = document.getElementById('marginModal');
+const closeMarginModal = document.getElementById('closeMarginModal');
+const saveMarginBtn = document.getElementById('saveMarginBtn');
+const newMarginInput = document.getElementById('newMarginInput');
+
+function openMarginModalFunc() {
+    newMarginInput.value = STATE.margin || 15;
+    marginModal.classList.remove('hidden');
+    setTimeout(() => marginModal.classList.add('visible'), 10);
+    newMarginInput.focus();
+}
+
+function closeMarginModalFunc() {
+    marginModal.classList.remove('visible');
+    setTimeout(() => marginModal.classList.add('hidden'), 300);
+}
+
+if (editMarginBtn) editMarginBtn.addEventListener('click', openMarginModalFunc);
+if (closeMarginModal) closeMarginModal.addEventListener('click', closeMarginModalFunc);
+window.addEventListener('click', (e) => {
+    if (e.target === marginModal) closeMarginModalFunc();
+});
+
+if (saveMarginBtn) {
+    saveMarginBtn.addEventListener('click', () => {
+        const newVal = parseFloat(newMarginInput.value);
+        if (!isNaN(newVal) && newVal >= 0) {
+            STATE.margin = newVal;
+            renderResults();
+            closeMarginModalFunc();
+        }
+    });
 }
 
 // --- Converter ---
